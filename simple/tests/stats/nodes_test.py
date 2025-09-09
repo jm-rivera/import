@@ -349,3 +349,29 @@ class TestNodes(unittest.TestCase):
             "barहिंदीfoo",
         ),
     )
+
+  def test_custom_namespace_generated_ids(self):
+    # Configure a non-default namespace and a manual group.
+    cfg = Config({
+        "customIdNamespace": "my",
+        "variables": {
+            "X": {
+                "group": "Parent/Child"
+            }
+        }
+    })
+    nodes = Nodes(cfg)
+    # Create a variable with unicode to force generated SV id.
+    sv = nodes.variable("fooहिंदीbar", self.a)
+    self.assertTrue(sv.id.startswith("my/statvar_"))
+    # Manual groups should use '<namespace>/g/group_<n>' ids.
+    # Variable X will create 'Parent' and 'Child'.
+    nodes.variable("X", self.a)
+    parent = nodes.groups["Parent"]
+    child = nodes.groups["Parent/Child"]
+    # The default custom root group is created when the first variable has no
+    # explicit group, so manual group numbering starts at 2 in this test.
+    self.assertEqual(parent.id, "my/g/group_2")
+    self.assertEqual(parent.name, "Parent")
+    self.assertEqual(child.id, "my/g/group_3")
+    self.assertEqual(child.name, "Child")

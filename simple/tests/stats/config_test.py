@@ -373,3 +373,23 @@ class TestConfig(unittest.TestCase):
 
     config = Config({"includeInputSubdirs": True})
     self.assertTrue(config.include_input_subdirs())
+
+  def test_custom_svg_prefix_derives_from_namespace(self):
+    # Derive from customIdNamespace when customSvgPrefix not set.
+    config = Config({"customIdNamespace": "my"})
+    self.assertEqual(config.custom_svg_prefix(), "my/g/")
+
+    # Explicit customSvgPrefix wins over namespace derivation.
+    config = Config({"customIdNamespace": "my", "customSvgPrefix": "acme/g/"})
+    self.assertEqual(config.custom_svg_prefix(), "acme/g/")
+
+  def test_sv_hierarchy_props_blocklist_additive(self):
+    from stats import schema_constants as sc
+    config = Config({"svHierarchyPropsBlocklist": ["fooProp", "barProp"]})
+    result = config.sv_hierarchy_props_blocklist()
+    # Additional props present
+    self.assertIn("fooProp", result)
+    self.assertIn("barProp", result)
+    # Built-in props retained
+    for p in sc.SV_HIERARCHY_PROPS_BLOCKLIST:
+      self.assertIn(p, result)

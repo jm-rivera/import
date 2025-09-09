@@ -21,6 +21,7 @@ import unittest
 from kg_util import mcf_parser
 from parameterized import parameterized
 from stats.data import Triple
+import stats.schema_constants as sc
 from stats.stat_var_hierarchy_generator import *
 from stats.stat_var_hierarchy_generator import _extract_svs
 from stats.stat_var_hierarchy_generator import _generate_internal
@@ -91,7 +92,10 @@ def _test_generate_internal(test: unittest.TestCase,
     expected_triples_csv_path = os.path.join(_EXPECTED_DIR,
                                              f"{test_name}_triples.csv")
 
-    hierarchy = _generate_internal(input_triples, vertical_specs, dcid2name)
+    hierarchy = _generate_internal(input_triples, vertical_specs, dcid2name,
+                                   sc.CUSTOM_SVG_PREFIX,
+                                   sc.DEFAULT_CUSTOM_ROOT_SVG_ID,
+                                   sc.SV_HIERARCHY_PROPS_BLOCKLIST)
     # Write SVGs json
     svgs_json = [svg.json() for _, svg in hierarchy.svgs.items()]
     with open(output_svgs_json_path, "w") as out:
@@ -172,7 +176,7 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
                    measured_property="")
     ]
 
-    svs = _extract_svs(input_triples)
+    svs = _extract_svs(input_triples, sc.SV_HIERARCHY_PROPS_BLOCKLIST)
 
     self.assertListEqual(svs, expected_svs)
 
@@ -239,7 +243,7 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
         pvs=[PropVal("gender", "Female"),
              PropVal("race", "Asian")],
         measured_property="count")
-    svg_id = sv_prop_vals.gen_svg_id()
+    svg_id = sv_prop_vals.gen_svg_id(sc.CUSTOM_SVG_PREFIX)
     self.assertEqual(svg_id, "c/g/Person_Gender-Female_Race-Asian")
 
   def test_gen_svg_id_with_long_property_values(self):
@@ -257,7 +261,7 @@ class TestStatVarHierarchyGenerator(unittest.TestCase):
             )
         ],
         measured_property="count")
-    svg_id = sv_prop_vals.gen_svg_id()
+    svg_id = sv_prop_vals.gen_svg_id(sc.CUSTOM_SVG_PREFIX)
     self.assertEqual(
         svg_id,
         "c/g/Person_PropertyWithAReallyLongValue-HereIsAPropertyWithAReallyLongValueToTestCausingASubjectIDOverflowOfMoreThan255CharactersWhenLoadingIntoTheDatabase_AnotherPropertyWithAReallyLongValue-HereIsAotherPropertyWithAReallyLongValueToTestCausingA-fafb3dea"
